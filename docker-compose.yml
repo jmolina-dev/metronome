@@ -8,7 +8,7 @@ services:
     volumes:
       - ./beets/config:/config
       - /music/collection:/music
-      - /music/downloads:/app/downloads
+      - /music/downloads:/downloads
     environment:
       - BEETS_PORT=8081
       - NAVIDROME_SCAN_URL=http://navidrome-scan:8080/scan
