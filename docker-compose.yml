@@ -1,0 +1,26 @@
+services:
+  beets:
+    build: ./beets-import
+    container_name: beets
+    ports:
+      - "127.0.0.1:9001:8081"
+    restart: always
+    volumes:
+      - ./beets/config:/config
+      - /music/collection:/music
+      - /music/downloads:/app/downloads
+    environment:
+      - BEETS_PORT=8081
+      - NAVIDROME_SCAN_URL=http://navidrome-scan:8080/scan
+
+  navidrome-scan:
+    build: ./navidrome-scan
+    container_name: navidrome-scan
+    ports:
+      - "127.0.0.1:9002:8080"
+    restart: always
+    environment:
+      - PORT=8080
+      - NAVIDROME_API_URL=http://navidrome:4533
+      - NAVIDROME_USER=<YOUR_NAVIDROME_API_USER>
+      - NAVIDROME_PASS=enc:<YOUR_HEX_ENCODED_PASSWORD_OR_TOKEN>
