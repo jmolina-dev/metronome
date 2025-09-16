@@ -13,7 +13,16 @@ import (
 	"time"
 )
 
-// apiResponse defines the standard JSON structure for API responses.
+type SubsonicResponseWrapper struct {
+	SubsonicResponse struct {
+		Status string `json:"status"`
+		Error  struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	} `json:"subsonic-response"`
+}
+
 type apiResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
@@ -25,10 +34,8 @@ func scanHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create a dedicated HTTP client with a reasonable timeout
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 
-	// Build the Navidrome webhook URL form env variables
 	scanURL := fmt.Sprintf("%s/rest/startScan.view?u=%s&p=%s&v=1.16.1&c=go-api&f=json",
 		os.Getenv("NAVIDROME_API_URL"),
 		os.Getenv("NAVIDROME_USER"),
@@ -43,7 +50,6 @@ func scanHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Execute the request to the Navidrome API
 	resp, err := httpClient.Do(navidromeReq)
 	if err != nil {
 		log.Printf("❌ Navidrome scan request failed: %v", err)
@@ -52,10 +58,32 @@ func scanHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	log.Printf("ℹ️  Navidrome scan triggered. Status; %s, Response: %s", resp.Status, string(body))
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("❌ Failed to read Navidrome response body: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to read Navidrome response")
+		return
+	}
 
-	respondWithJSON(w, http.StatusOK, apiResponse{Status: "ok", Message: "Navidrome scan executed successfully."})
+	var subsonicResp SubsonicResponseWrapper
+	if err := json.Unmarshal(body, &subsonicResp); err != nil {
+		log.Printf("❌ Failed to parse Navidrome JSON response: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Invalid response from Navidrome")
+		return
+	}
+
+	if subsonicResp.SubsonicResponse.Status == "failed" {
+		errMsg := fmt.Sprintf("Navidrome returned an error: %s (Code: %d)",
+			subsonicResp.SubsonicResponse.Error.Message,
+			subsonicResp.SubsonicResponse.Error.Code,
+		)
+		log.Printf("❌: %s", errMsg)
+		respondWithError(w, http.StatusBadGateway, errMsg)
+		return
+	}
+
+	log.Printf("Navidrome scan triggered successfully. Status: %s", subsonicResp.SubsonicResponse.Status)
+	respondWithJSON(w, http.StatusOK, apiResponse{Status: "ok", Message: "Navidrome scan triggered successfully."})
 }
 
 func main() {
