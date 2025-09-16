@@ -41,14 +41,14 @@ func (s *AppState) taskHandler(w http.ResponseWriter, r *http.Request) {
 func (s *AppState) runTask() {
 	defer s.mu.Unlock()
 
-	log.Println("ℹ️  Starting beet import  🫜")
+	log.Println("ℹ️  Starting beet import 🫜")
 	cmd := exec.Command("beet", "import", "/app/downloads")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("❌  Beets import failed: %v\nOutput: %s", err, string(output))
+		log.Printf("❌ Beets import failed: %v\nOutput: %s", err, string(output))
 		return
 	}
-	log.Printf("✅  Beets import finished successfully  🫜")
+	log.Printf("✅ Beets import finished successfully 🫜")
 
 	navidromeScanURL := os.Getenv("NAVIDROME_SCAN_URL")
 	if navidromeScanURL == "" {
@@ -60,22 +60,22 @@ func (s *AppState) runTask() {
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 	req, err := http.NewRequest("POST", navidromeScanURL, nil)
 	if err != nil {
-		log.Printf("❌  Failed to create Navidrome request: %v", err)
+		log.Printf("❌ Failed to create Navidrome request: %v", err)
 		return
 	}
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Printf("❌  Navidrome scan request failed: %v", err)
+		log.Printf("❌ Navidrome scan request failed: %v", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		log.Printf("❌  Navidrome API returned non-success status: %s", resp.Status)
+		log.Printf("❌ Navidrome API returned non-success status: %s", resp.Status)
 		return
 	}
-	log.Println("✅  Navidrome scan launched successfully")
+	log.Println("✅ Navidrome scan launched successfully")
 }
 
 func main() {
@@ -96,7 +96,7 @@ func main() {
 	go func() {
 		log.Printf("🗣️  Beets-webhook listening on %s", listenAddr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("❌  Server failed to start: %v", err)
+			log.Fatalf("❌ Server failed to start: %v", err)
 		}
 	}()
 
@@ -107,9 +107,9 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("❌  Server shutdown failed: %v", err)
+		log.Fatalf("❌ Server shutdown failed: %v", err)
 	}
-	log.Println("🛑  Server stopped")
+	log.Println("🛑 Server stopped")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {

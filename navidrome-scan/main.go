@@ -38,7 +38,7 @@ func scanHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Received request, executing Navidrome scan 🔎")
 	navidromeReq, err := http.NewRequest("GET", scanURL, nil)
 	if err != nil {
-		log.Printf("❌  Failed to create Navidrome request: %v", err)
+		log.Printf("❌ Failed to create Navidrome request: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "Failed to create internal request")
 		return
 	}
@@ -46,7 +46,7 @@ func scanHandler(w http.ResponseWriter, r *http.Request) {
 	// Execute the request to the Navidrome API
 	resp, err := httpClient.Do(navidromeReq)
 	if err != nil {
-		log.Printf("❌  Navidrome scan request failed: %v", err)
+		log.Printf("❌ Navidrome scan request failed: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "Failed to execute Navidrome scan")
 		return
 	}
@@ -75,7 +75,7 @@ func main() {
 	go func() {
 		log.Printf("🗣️  Navidrome scan service listening on %s", listenAddr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("❌  Server failed to start: %v", err)
+			log.Fatalf("❌ Server failed to start: %v", err)
 		}
 	}()
 
@@ -86,9 +86,9 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("❌  Server shutdown failed: %v", err)
+		log.Fatalf("❌ Server shutdown failed: %v", err)
 	}
-	log.Println("✅  Server gracefully stopped.")
+	log.Println("✅ Server gracefully stopped.")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
